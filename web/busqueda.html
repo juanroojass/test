@@ -6,6 +6,9 @@
 			font: bold 95% sans-serif;
 			color:#5D6D7E;
 		}
+		.datos_adicionales{
+			font: 75% sans-serif;
+		}
 	</style>
 
 	<head>	
@@ -23,17 +26,32 @@
 	</head>
 
 	<body onload="initMap()">		
-		<table align="center" style="width:100%" >		
+		<table align="center" border=0 style="width:100%" >		
 			
 			<tr>			
-				<td>				   	
+				<td style="width:67%">				   	
 					<a class="titulo_principal">Resultado de b&uacute;squeda de restaurantes:</a><br><br>
 					<div id="mapa" style="width: 500px; height: 400px;"> </div>			   
 				</td>
+				<td>
+					<table border=0 class="datos_adicionales">
+						<tr>
+							<td><a id="nombreRest"></a> </td>
+						</tr>
+						<tr>
+							<td> <a id="calif"></a> </td>
+						</tr>
+						<tr>
+							<td></td>
+						</tr>
+					</table>
+				</td>
 			</tr>			
 			
-			
-		</table>
+		</table><br>
+		
+		<a class="datos_adicionales" id="totalRest"></a><br>
+		<a class="datos_adicionales" id="calif_promedio"></a>
 
 	</body>
 </html>
@@ -41,7 +59,10 @@
 <script>
  var map;
  var infowindow;
- 
+ var service;
+ var markerArray = [];
+ var calif = [];
+
   function initMap()
  {
  // Creamos un mapa con las coordenadas actuales
@@ -67,36 +88,113 @@
    var request = {
      location: myLatlng,
      radius: 5000,
-     types: ['restaurant']
+     types: ['restaurant', 'restaurante']
    };
+	
+	//Ubicacion propia
+	var markerPropio = new google.maps.Marker({
+		position: myLatlng,
+		map:map,
+		title: 'Mi ubicacion',
+		draggable: true,
+		icon: '../img/mypoint.png'
+		});
+	
+	google.maps.event.addListener(markerPropio, "dragend", function() { 
+				document.getElementById("nombreRest").innerHTML='';
+				document.getElementById("calif").innerHTML=''; 	
+				
+				calif.length=0;	
+				document.getElementById("totalRest").innerHTML='Total de restaurantes ubicados: <b>0</b>';
+				document.getElementById("calif_promedio").innerHTML='Calificacion promedio: <b>0</b>';							
+	 
+				borrarMarcas();
+				
+				myLatlng = new google.maps.LatLng(markerPropio.getPosition().lat(), markerPropio.getPosition().lng());
+				
+				request = {
+					 location: myLatlng,
+					 radius: 5000,
+					 types: ['restaurant', 'restaurante']
+				   };					   
+							
+				service = new google.maps.places.PlacesService(map);
 
+			   service.nearbySearch(request, function(results, status) {
+				 if (status === google.maps.places.PlacesServiceStatus.OK) {
+				 
+				   for (var i = 0; i < results.length; i++) {
+					 crearMarcador(results[i]);
+				   }
+				   
+				   var suma = calif.reduce(function(a, b){
+					  return a + b; //Regresa el acumulador más el siguiente
+					}, 0);
+					var promedio = suma/calif.length;		
+				   document.getElementById("totalRest").innerHTML='Total de restaurantes ubicados: <b>'+calif.length+'</b>';
+				   document.getElementById("calif_promedio").innerHTML='Calificacion promedio: <b>'+promedio.toFixed(2)+'</b>';
+				   
+				 }
+			   });
+			   
+		   //markerPropio.setMap(map); 
+					
+	});
+	
+	//markerPropio.setMap(map); 
+	
    // Creamos el servicio PlaceService y enviamos la petición.
-   var service = new google.maps.places.PlacesService(map);
+   service = new google.maps.places.PlacesService(map);
 
    service.nearbySearch(request, function(results, status) {
      if (status === google.maps.places.PlacesServiceStatus.OK) {
        for (var i = 0; i < results.length; i++) {
          crearMarcador(results[i]);
        }
+
+	   var suma = calif.reduce(function(a, b){
+		  return a + b; //Regresa el acumulador más el siguiente
+		}, 0);
+		var promedio = suma/calif.length;		
+	   document.getElementById("totalRest").innerHTML='Total de restaurantes ubicados: <b>'+calif.length+'</b>';
+	   document.getElementById("calif_promedio").innerHTML='Calificacion promedio: <b>'+promedio.toFixed(2)+'</b>';
      }
    });
+   
+   
+   
  });
 }
 
- function crearMarcador(place)
- {
-   // Creamos un marcador
-   var marker = new google.maps.Marker({
-     map: map,
-	 draggable:false,
-     position: place.geometry.location
-   });
+function crearMarcador(place){
+	// Creamos un marcador
+	var marker = new google.maps.Marker({
+		 map: map,
+		 draggable:false,
+		 position: place.geometry.location
+	});
 
- // Asignamos el evento click del marcador
-   google.maps.event.addListener(marker, 'click', function() {
-     infowindow.setContent(place.name);
-     infowindow.open(map, this);
-   });
-   }
+	markerArray.push(marker);
+	if(place.rating>0){
+		calif.push(place.rating);
+	}else{
+		calif.push(0);
+	}
+	
+	// Asignamos el evento click del marcador
+	google.maps.event.addListener(marker, 'click', function() {
+	 infowindow.setContent(place.name);
+	 infowindow.open(map, this);
+	 document.getElementById("nombreRest").innerHTML='<b>'+place.name+'</b>';
+	 document.getElementById("calif").innerHTML='Calificaci\u00F3n: '+place.rating; 
+	 
+	 //console.log(place);
+	});
+}
 
+function borrarMarcas(){
+   for (var i = 0; i < markerArray.length; i++) {
+		markerArray[i].setMap(null);
+	};
+}
 </script>
