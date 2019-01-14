@@ -1,0 +1,102 @@
+<!--<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"> -->
+<!DOCTYPE html>
+<html>
+	<style>
+		.titulo_principal{
+			font: bold 95% sans-serif;
+			color:#5D6D7E;
+		}
+	</style>
+
+	<head>	
+		<meta charset="UTF-8">
+		<!--<meta name="viewport" content="initial-scale=1.0">	-->	
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<script src="../js/jquery-1.11.3.min.js"></script>			
+		
+		<!--<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCTn3lsYvKIYc9TomjhY0dseSYpgJ2QZCQ&callback=initMap"></script>-->
+		<!--<script type="text/javascript" src="https://maps.google.com/maps/api/js?libraries=places"></script>-->
+		<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCTn3lsYvKIYc9TomjhY0dseSYpgJ2QZCQ&libraries=places"></script>
+		
+		<title>B&uacute;squeda de restaurantes</title>
+		
+	</head>
+
+	<body onload="initMap()">		
+		<table align="center" style="width:100%" >		
+			
+			<tr>			
+				<td>				   	
+					<a class="titulo_principal">Resultado de b&uacute;squeda de restaurantes:</a><br><br>
+					<div id="mapa" style="width: 500px; height: 400px;"> </div>			   
+				</td>
+			</tr>			
+			
+			
+		</table>
+
+	</body>
+</html>
+
+<script>
+ var map;
+ var infowindow;
+ 
+  function initMap()
+ {
+ // Creamos un mapa con las coordenadas actuales
+   navigator.geolocation.getCurrentPosition(function(pos) {
+
+   lat = pos.coords.latitude;
+   lon = pos.coords.longitude;
+
+   var myLatlng = new google.maps.LatLng(lat, lon);
+
+   var mapOptions = {
+     center: myLatlng,
+     zoom: 14,
+     mapTypeId: google.maps.MapTypeId.ROADMAP
+   };
+
+   map = new google.maps.Map(document.getElementById("mapa"),  mapOptions);
+
+   // Creamos el infowindow
+   infowindow = new google.maps.InfoWindow();
+
+   // Especificamos la localización, el radio y el tipo de lugares que queremos obtener
+   var request = {
+     location: myLatlng,
+     radius: 5000,
+     types: ['restaurant']
+   };
+
+   // Creamos el servicio PlaceService y enviamos la petición.
+   var service = new google.maps.places.PlacesService(map);
+
+   service.nearbySearch(request, function(results, status) {
+     if (status === google.maps.places.PlacesServiceStatus.OK) {
+       for (var i = 0; i < results.length; i++) {
+         crearMarcador(results[i]);
+       }
+     }
+   });
+ });
+}
+
+ function crearMarcador(place)
+ {
+   // Creamos un marcador
+   var marker = new google.maps.Marker({
+     map: map,
+	 draggable:false,
+     position: place.geometry.location
+   });
+
+ // Asignamos el evento click del marcador
+   google.maps.event.addListener(marker, 'click', function() {
+     infowindow.setContent(place.name);
+     infowindow.open(map, this);
+   });
+   }
+
+</script>

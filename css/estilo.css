@@ -1,0 +1,18 @@
+.titulos_tabla{
+	text-align: center;
+	font: bold 75% sans-serif;
+	background-color: #FDEBD0;
+	border: white 1px solid;
+}
+
+.infoTabla{	
+	font: 75% sans-serif;
+	border: white 1px solid;
+}
+.titulo_principal{
+	font: bold 105% sans-serif;
+	color:#5D6D7E;
+}
+.datos_adicionales{
+	font: 75% sans-serif;
+}
